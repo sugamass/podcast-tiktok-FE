@@ -24,6 +24,8 @@ React Native + Expo を使って構築された音声ポッドキャストアプ
 - [Express](https://expressjs.com/) - REST API 開発
 - [PostgreSQL] - データベース
 
+## 🎥 デモ
+[podcast作成機能と再生機能](https://github.com/sugamass/podcast-tiktok-FE/issues/1)
 
 ## 📦 インストール方法（Mac + Xcode 編）
 
