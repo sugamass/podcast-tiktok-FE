@@ -1,50 +1,73 @@
-# Welcome to your Expo app 👋
+# 📱 Podcast Tiktok
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native + Expo を使って構築された音声ポッドキャストアプリです。ユーザーは音声コンテンツを視聴したり、自身のポッドキャストを投稿できます。
 
-## Get started
+## 🚀 特徴
 
-1. Install dependencies
+- Expo SDK + React Native によるクロスプラットフォーム開発（iOS / Android）
+- 縦スクロールでポッドキャストを次々に再生（TikTok風UI）
+- 音声プレイヤーに `expo-av` を使用
 
-   ```bash
-   npm install
-   ```
+## 🛠 技術スタック
 
-2. Start the app
+### フロントエンド
+- [React Native](https://reactnative.dev/)
+- [Expo](https://expo.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [React Navigation](https://reactnavigation.org/)
+- [Tailwind CSS (via NativeWind)](https://www.nativewind.dev/)
+- [expo-av](https://docs.expo.dev/versions/latest/sdk/av/) - 音声再生用ライブラリ
 
-   ```bash
-    npx expo start
-   ```
+### バックエンド
 
-In the output, you'll find options to open the app in a
+- [Node.js](https://nodejs.org/)
+- [Express](https://expressjs.com/) - REST API 開発
+- [PostgreSQL] - データベース
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📦 インストール方法（Mac + Xcode 編）
 
-## Get a fresh project
+### 1. 前提条件
 
-When you're ready, run:
+以下のソフトウェアがインストールされている必要があります：
 
-```bash
-npm run reset-project
+- [Node.js (v18以上推奨)](https://nodejs.org/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- [Xcode（iOSシミュレータ用）](https://apps.apple.com/jp/app/xcode/id497799835?mt=12)
+- [Expo Go アプリ（スマホでテスト用）](https://expo.dev/client)
+> 💡 Androidでテストしたい場合は Android Studio + エミュレータが必要です
+
+[参考]  
+https://deku.posstree.com/react-native/install-on-mac/  
+react-nativeの環境構築の際、こちらの記事が参考になります。
+
+https://qiita.com/hotehote/items/b4c4ba9c175547f8209a  
+expo、xcode、androidStudioのインストールはこちらが参考になります。
+
+
+---
+
+### 2. このリポジトリをクローン
+
+```sh
+git clone https://github.com/sugamass/podcast-tiktok-FE.git
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 3. envファイルを作成
 
-## Learn more
+```
+EXPO_PUBLIC_API_URL=http://localhost:3000
+```
+>実機テストをする場合はlocalhostの部分をPCのIPアドレスに変える必要があります。
 
-To learn more about developing your project with Expo, look at the following resources:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 4. アプリの起動
 
-## Join the community
+### 開発サーバーの起動
+[BEリポジトリ](https://github.com/sugamass/podcast-tiktok-BE) を参考にAPIサーバーを立ち上げてください。
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+次に、以下のコマンドでアプリを起動します。
+```sh
+npm install
+npm run start
+```
