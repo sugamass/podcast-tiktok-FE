@@ -13,9 +13,15 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ScriptMeta, AllScriptData, PromptScriptData } from "@/types/Script";
-import { postAudio } from "@/services/audio";
+import {
+  postAudio,
+  postNewAudio,
+  deleteNewAudio,
+  postAudioTest,
+} from "@/services/audio";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
+import AudioTest from "@/components/AudioTest";
 
 interface SetAudioScreenProps {
   originalScriptData: string;
@@ -75,6 +81,9 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
   const [scriptData, setScriptData] = useState<PromptScriptData>(
     originalScriptDataObj
   );
+  const [scriptId, setScriptId] = useState<string>("");
+  const [remarkAudioUrls, setRemarkAudioUrls] = useState<string[]>([]);
+  const [audioUrl, setAudioUrl] = useState<string>("");
 
   const addedSpeakers = new Set<string>();
   const speakers: string[] = [];
@@ -107,6 +116,38 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
   };
 
   const handleSubmit = async () => {
+    // if (
+    //   title.trim() === "" ||
+    //   (speakers.length > 0 && speakers.some((speaker) => speaker.trim() === ""))
+    // ) {
+    //   setError("全ての必須項目を入力してください");
+    //   return;
+    // }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await postAudioTest(
+        scriptData.script,
+        tts,
+        voices,
+        speakers,
+        scriptId
+      );
+      console.log("res", res);
+
+      setScriptId(res.scriptId);
+      setRemarkAudioUrls(res.mp3Urls);
+      setAudioUrl(res.m3u8Url);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "音声の作成に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirm = async () => {
     if (
       title.trim() === "" ||
       (speakers.length > 0 && speakers.some((speaker) => speaker.trim() === ""))
@@ -284,19 +325,19 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
           </View>
 
           {error && <Text className="text-red-500 text-sm mb-4">{error}</Text>}
-
           <TouchableOpacity
             onPress={handleSubmit}
-            className="mt-5 bg-indigo-600 rounded-xl p-3"
+            className="mt-4 bg-indigo-600 rounded-xl p-3"
           >
             {loading ? (
               <ActivityIndicator size="large" color="#FFFFFF" />
             ) : (
               <Text className="text-white text-lg font-bold text-center">
-                ポッドキャストを作成
+                音声を作成
               </Text>
             )}
           </TouchableOpacity>
+          {audioUrl ? <AudioTest url={audioUrl} /> : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
