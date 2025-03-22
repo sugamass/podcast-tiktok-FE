@@ -12,6 +12,7 @@ import {
 import fetchAgentRN from "@/graphAI/agent/fetch_agent_rn";
 import { openAIAgent } from "@graphai/openai_agent";
 import { streamAgentFilterGenerator } from "@graphai/agent_filters";
+import openAIAgentRN from "@/graphAI/agent/openai_agent_rn";
 
 const messageContent = `次に与えるトピックについて、内容全てを高校生にも分かるように、複数人の登場人物による会話形式、あるいはナレーターによるナレーション形式の台本を作って。ただし要点はしっかりと押さえて。
 最初の一言は、Announcerによるトピックの紹介にして。
@@ -438,7 +439,7 @@ export const useGenerateScript = (
           messages: ":scriptMessages.array.$0",
           prompt: ":promptInput",
         },
-        console: { before: true, after: true },
+        console: { after: true },
         isResult: true,
       },
       output: {
@@ -449,7 +450,6 @@ export const useGenerateScript = (
     },
   };
 
-  // TODO streamingうまくいかないので保留
   const callback = (context: AgentFunctionContext, data: string) => {
     console.log("Data received:", data);
     const { nodeId } = context.debugInfo;
@@ -460,7 +460,7 @@ export const useGenerateScript = (
     {
       name: "streamAgentFilter",
       agent: streamAgentFilter,
-      agentIds: ["openAIAgent"],
+      agentIds: ["llm"],
     },
   ];
 
@@ -475,11 +475,11 @@ export const useGenerateScript = (
         copyAgent,
         pushAgent,
         nestedAgent,
-        openAIAgent,
+        openAIAgent: openAIAgentRN,
         mapAgent,
         fetchAgent: fetchAgentRN,
       },
-      { agentFilters } // TODO streamingがうまくいかない（FEだと[Error: Attempted to iterate over a response with no body]、BEだとcallback関数が動かない）
+      { agentFilters }
     );
     // graphai.registerCallback(updateCytoscape);
     graphai.injectValue("promptInput", prompt);
@@ -488,16 +488,15 @@ export const useGenerateScript = (
     graphai.injectValue("searchMessage", searchMessages);
     graphai.injectValue("reference", reference ?? []);
 
-    const result = await graphai.run();
+    const res = await graphai.run();
+    console.log("Result:", res);
 
     let generatedScriptString = "";
-    for (const [_, value] of Object.entries(result)) {
+    for (const [_, value] of Object.entries(res)) {
       if (typeof value === "object") {
         for (const [key2, value2] of Object.entries(value)) {
           if (key2 == "data") {
             generatedScriptString = value2;
-          } else {
-            throw new Error("data is required");
           }
         }
       }

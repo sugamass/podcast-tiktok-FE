@@ -102,7 +102,6 @@ const PromptFormScreen = () => {
       //   speakers
       // );
       // ここでgraphAIを回す
-
       await runGraph();
       console.log("result", result);
 

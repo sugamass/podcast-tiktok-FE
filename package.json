@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
     "@graphai/agent_filters": "^1.0.0",
+    "@graphai/agent_utils": "^0.0.9",
     "@graphai/openai_agent": "^0.2.7",
     "@graphai/vanilla": "^0.2.14",
     "@react-native-picker/picker": "^2.9.0",
@@ -38,7 +39,7 @@
     "expo-system-ui": "~4.0.8",
     "expo-video": "~2.0.6",
     "expo-web-browser": "~14.0.2",
-    "graphai": "^0.6.23",
+    "graphai": "^1.0.2",
     "nativewind": "^4.1.23",
     "react": "18.3.1",
     "react-dom": "18.3.1",
