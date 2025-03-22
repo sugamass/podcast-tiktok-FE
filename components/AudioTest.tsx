@@ -58,7 +58,7 @@ const AudioTest: React.FC<AudioTestProps> = ({ url }) => {
         onPress={togglePlayback}
         className="p-3 bg-indigo-600 rounded-xl"
       >
-        <Text className="text-white text-center">
+        <Text className="text-white text-center font-bold">
           {isPlaying ? "一時停止" : "再生"}
         </Text>
       </TouchableOpacity>

@@ -15,6 +15,13 @@ export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
       throw new Error(`HTTP Error! Status: ${response.status}`);
     }
 
+    const contentLength = response.headers.get("content-length");
+    const contentType = response.headers.get("content-type");
+
+    if (!contentLength || contentLength === "0") {
+      return;
+    }
+
     return await response.json();
   } catch (error) {
     console.error("API fetch error:", error);
