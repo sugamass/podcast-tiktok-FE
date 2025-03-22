@@ -13,10 +13,10 @@ import {
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { generateScriptGraph } from "@/graphAI/graph/GenerateScriptGraph";
 import { postScript } from "@/services/script";
 import { AllScriptData } from "@/types/Script";
 import { Ionicons } from "@expo/vector-icons";
+import { useGenerateScript } from "@/graphAI/graph/useGenerateScriptGraph";
 
 const PromptFormScreen = () => {
   const router = useRouter();
@@ -69,6 +69,13 @@ const PromptFormScreen = () => {
     setIsSearch(!isSearch);
   };
 
+  const { runGraph, streamingData, result, setResult } = useGenerateScript(
+    scriptPrompt,
+    [],
+    references,
+    isSearch
+  );
+
   const handleSubmit = async () => {
     if (
       (references.length > 0 && references.some((ref) => ref.trim() === "")) ||
@@ -87,17 +94,24 @@ const PromptFormScreen = () => {
         script.currentScript
       );
 
-      const data = await postScript(
-        scriptPrompt,
-        isSearch,
-        previousScripts,
-        references,
-        speakers
-      );
+      // const data = await postScript(
+      //   scriptPrompt,
+      //   isSearch,
+      //   previousScripts,
+      //   references,
+      //   speakers
+      // );
+      // ここでgraphAIを回す
 
-      console.log("data", data);
-      setScript(data);
-      setReferences(data.currentScript.reference ?? []);
+      await runGraph();
+      console.log("result", result);
+
+      // console.log("res", data);
+      // setScript(data);
+      // setReferences(data.currentScript.reference ?? []);
+      console.log("res", result);
+      // setScript(result);
+      // setReferences(result.currentScript.reference ?? []);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "スクリプトの生成に失敗しました");
@@ -157,6 +171,11 @@ const PromptFormScreen = () => {
             </Text>
             <View className="h-1 w-16 bg-blue-400 rounded-full mx-auto mt-2" />
           </View>
+
+          {/* streamingデータ確認用 */}
+          <Text className="text-base bg-gray-100 p-3 rounded-md">
+            {JSON.stringify(streamingData, null, 2)}
+          </Text>
 
           {/* Generated Script Section */}
           {script?.currentScript.script &&

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@graphai/agent_filters": "^1.0.0",
     "@graphai/openai_agent": "^0.2.7",
     "@graphai/vanilla": "^0.2.14",
     "@react-native-picker/picker": "^2.9.0",
