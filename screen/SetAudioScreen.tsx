@@ -13,9 +13,16 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ScriptMeta, AllScriptData, PromptScriptData } from "@/types/Script";
-import { postAudio } from "@/services/audio";
+import {
+  postAudio,
+  postNewAudio,
+  deleteNewAudio,
+  postAudioTest,
+} from "@/services/audio";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
+import AudioTest from "@/components/AudioTest";
+import { Audio } from "expo-av";
 
 interface SetAudioScreenProps {
   originalScriptData: string;
@@ -75,6 +82,9 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
   const [scriptData, setScriptData] = useState<PromptScriptData>(
     originalScriptDataObj
   );
+  const [scriptId, setScriptId] = useState<string>("");
+  const [remarkAudioUrls, setRemarkAudioUrls] = useState<string[]>([]);
+  const [audioUrl, setAudioUrl] = useState<string>("");
 
   const addedSpeakers = new Set<string>();
   const speakers: string[] = [];
@@ -90,6 +100,8 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
     Array(speakers.length).fill(openaiVoices[0].value)
   );
 
+  const [remarkSound, setRemarkSound] = useState<Audio.Sound | null>(null);
+
   const setOpenAITts = () => {
     setTts("openAI");
     setVoiceOptions(openaiVoices);
@@ -103,10 +115,57 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
   };
 
   const handleBack = () => {
+    if (audioUrl) {
+      // サーバーのキャッシュを削除
+      try {
+        deleteNewAudio(scriptId);
+
+        // 初期化
+        setScriptId("");
+        setRemarkAudioUrls([]);
+        setAudioUrl("");
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || "音声の削除に失敗しました");
+        return;
+      }
+    }
     router.back();
   };
 
   const handleSubmit = async () => {
+    // if (
+    //   title.trim() === "" ||
+    //   (speakers.length > 0 && speakers.some((speaker) => speaker.trim() === ""))
+    // ) {
+    //   setError("全ての必須項目を入力してください");
+    //   return;
+    // }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await postAudioTest(
+        scriptData.script,
+        tts,
+        voices,
+        speakers,
+        scriptId
+      );
+      console.log("res", res);
+
+      setScriptId(res.scriptId);
+      setRemarkAudioUrls(res.mp3Urls);
+      setAudioUrl(res.m3u8Url);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "音声の作成に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirm = async () => {
     if (
       title.trim() === "" ||
       (speakers.length > 0 && speakers.some((speaker) => speaker.trim() === ""))
@@ -118,14 +177,15 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const res = await postAudio(
+      const res = await postNewAudio(
         title,
         description ?? "",
         scriptData.script,
         "user_id",
         tts,
         voices,
-        speakers
+        speakers,
+        scriptId
       );
       console.log("res", res);
       router.replace({
@@ -137,6 +197,24 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
       setError(err.message || "音声の作成に失敗しました");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRemarkPlay = async (index: number) => {
+    try {
+      // 既に再生中のサウンドがあれば解放する
+      if (remarkSound) {
+        await remarkSound.unloadAsync();
+        setRemarkSound(null);
+      }
+      console.log("remarkAudioUrls", remarkAudioUrls);
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: remarkAudioUrls[index] },
+        { shouldPlay: true }
+      );
+      setRemarkSound(sound);
+    } catch (error) {
+      console.error("remark 音声の再生エラー", error);
     }
   };
 
@@ -204,11 +282,38 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
 
             {/* スクリプトの表示 */}
             {scriptData.script.map((item, index) => (
-              <View key={index} className="mb-4 p-4 bg-gray-800 rounded-xl">
+              // <View key={index} className="mb-4 p-4 bg-gray-800 rounded-xl">
+              <View
+                key={index}
+                className="relative mb-4 p-4 bg-gray-800 rounded-xl"
+              >
+                {remarkAudioUrls.length > index && (
+                  <TouchableOpacity
+                    onPress={() => handleRemarkPlay(index)}
+                    className="absolute top-2 right-2"
+                  >
+                    <Ionicons
+                      name="play-circle-outline"
+                      size={20}
+                      color="white"
+                    />
+                  </TouchableOpacity>
+                )}
                 <Text className="text-lg font-bold text-blue-400">
                   {item.speaker}
                 </Text>
-                <Text className="text-base mt-1 text-white">{item.text}</Text>
+                <TextInput
+                  value={item.text}
+                  onChangeText={(text) => {
+                    // スクリプト全体をコピーして対象の項目の text を更新
+                    const newScript = [...scriptData.script];
+                    newScript[index] = { ...newScript[index], text };
+                    setScriptData({ ...scriptData, script: newScript });
+                  }}
+                  className="text-base mt-1 text-white"
+                  multiline
+                  style={{ color: "white" }}
+                />
                 {item.caption && (
                   <Text className="text-sm text-gray-300 italic mt-1">
                     {item.caption}
@@ -284,21 +389,41 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
           </View>
 
           {error && <Text className="text-red-500 text-sm mb-4">{error}</Text>}
-
           <TouchableOpacity
             onPress={handleSubmit}
-            className="mt-5 bg-indigo-600 rounded-xl p-3"
+            className="mt-4 bg-indigo-600 rounded-xl p-3"
           >
             {loading ? (
               <ActivityIndicator size="large" color="#FFFFFF" />
             ) : (
               <Text className="text-white text-lg font-bold text-center">
-                ポッドキャストを作成
+                {audioUrl ? "音声を再生成" : "音声を作成"}
               </Text>
             )}
           </TouchableOpacity>
+          {audioUrl ? <AudioTest url={audioUrl} /> : null}
+
+          {audioUrl && (
+            <TouchableOpacity
+              onPress={handleConfirm}
+              className="mt-8 bg-indigo-600 rounded-xl p-3 border-2 border-white"
+            >
+              {loading ? (
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              ) : (
+                <Text className="text-white text-lg font-bold text-center">
+                  ポッドキャストを投稿
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
+      {loading && (
+        <View className="absolute inset-0 bg-black bg-opacity-50 justify-center items-center">
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      )}
     </View>
   );
 };

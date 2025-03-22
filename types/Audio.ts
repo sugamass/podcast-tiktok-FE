@@ -8,3 +8,9 @@ export type AudioItem = {
   createdAt: string;
   createdBy: string;
 };
+
+export type AudioUrl = {
+  m3u8Url: string;
+  mp3Urls: string[];
+  scriptId: string;
+};
