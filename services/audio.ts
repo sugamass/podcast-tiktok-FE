@@ -42,6 +42,7 @@ export const postAudio = async (
     description: response.description,
     createdAt: response.created_at,
     createdBy: response.created_by,
+    script: [], // 一旦
   };
 
   return result;
@@ -76,6 +77,11 @@ export const getAudioData = async (
     description: data.description,
     createdAt: data.created_at,
     createdBy: data.created_by,
+    script: data.script.map((data) => ({
+      speaker: data.speaker,
+      text: data.text,
+      caption: data.caption,
+    })),
   }));
 
   return result;
@@ -146,6 +152,7 @@ export const postNewAudio = async (
     description: response.description,
     createdAt: response.created_at,
     createdBy: response.created_by,
+    script: [], // 一旦
   };
 
   return result;

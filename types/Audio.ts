@@ -1,3 +1,5 @@
+import { Remark } from "./Script";
+
 export type AudioItem = {
   id: string;
   // audioUrl: number;
@@ -7,6 +9,7 @@ export type AudioItem = {
   description: string;
   createdAt: string;
   createdBy: string;
+  script: Remark[];
 };
 
 export type AudioUrl = {

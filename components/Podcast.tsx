@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  Animated,
+} from "react-native";
+import Slider from "@react-native-community/slider";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { AudioItem } from "@/types/Audio";
 import { Audio } from "expo-av";
@@ -12,9 +20,13 @@ type PostProps = AudioItem & {
   onAudioEnd: () => void;
 };
 
-const podcast: React.FC<PostProps> = (props) => {
+const Podcast: React.FC<PostProps> = (props) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPause, setIsPause] = useState(false);
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
+  // Animated.Value を用いてアイコンのフェードアウトを実装
+  const [iconOpacity] = useState(new Animated.Value(1));
   const isFocused = useIsFocused();
 
   const tabBarHeight = useBottomTabBarHeight();
@@ -26,7 +38,6 @@ const podcast: React.FC<PostProps> = (props) => {
     month: "long",
     day: "numeric",
   });
-
   const formattedTime = date.toLocaleTimeString("ja-JP", {
     hour: "2-digit",
     minute: "2-digit",
@@ -44,6 +55,17 @@ const podcast: React.FC<PostProps> = (props) => {
         { shouldPlay: false, isLooping: false }
       );
       setSound(sound);
+
+      // 再生状況の更新を監視
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          setPosition(status.positionMillis);
+          setDuration(status.durationMillis ?? 0);
+          if (status.didJustFinish && !status.isLooping) {
+            props.onAudioEnd();
+          }
+        }
+      });
     }
     loadSound();
 
@@ -52,16 +74,16 @@ const podcast: React.FC<PostProps> = (props) => {
         sound.unloadAsync();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     async function handleFocusChange() {
       if (sound) {
         if (!isFocused) {
-          // When tab loses focus, pause the audio
+          // タブからフォーカスが外れたら一時停止
           await sound.pauseAsync();
         } else if (props.isActive && !isPause && isFocused) {
-          // Only resume playing if this post is active, not paused, and tab is focused
           await sound.playAsync();
         }
       }
@@ -69,7 +91,6 @@ const podcast: React.FC<PostProps> = (props) => {
     handleFocusChange();
   }, [isFocused, sound, props.isActive, isPause]);
 
-  // isActiveの変化に合わせて再生/一時停止
   useEffect(() => {
     async function controlAudio() {
       if (sound && isFocused) {
@@ -81,19 +102,25 @@ const podcast: React.FC<PostProps> = (props) => {
       }
     }
     controlAudio();
-  }, [props.isActive, isPause, sound]);
+  }, [props.isActive, isPause, sound, isFocused]);
 
-  // useEffect(() => {
-  //   const isSound = sound ? true : false;
-  //   // console.log("title", props.title);
-  //   // console.log("soundeffect", isSound);
-  // }, [sound]);
+  // isPause の変更時に、アイコンの表示（フェードイン→フェードアウト）を実行
+  useEffect(() => {
+    // 初期表示（すぐに 1 に設定）
+    iconOpacity.setValue(1);
+    Animated.timing(iconOpacity, {
+      toValue: 0,
+      duration: 1000,
+      delay: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [isPause, iconOpacity]);
 
   return (
     <TouchableOpacity
       activeOpacity={1}
       onPress={() => setIsPause((prev) => !prev)}
-      className="flex-1  bg-black"
+      className="flex-1 bg-black"
     >
       <View className="h-full w-full flex items-start justify-start">
         <View style={{ height: topHeight }} />
@@ -104,40 +131,32 @@ const podcast: React.FC<PostProps> = (props) => {
         />
 
         <View className="absolute z-10 inset-0">
-          {!isPause && (
-            <View className="absolute top-1/2 -translate-y-2 self-center">
-              {/* <Ionicons
-                name="ios-play"
-                size={30}
-                color="white"
-                style={{ opacity: 0.8 }}
-              /> */}
-            </View>
-          )}
+          {/* 中央にフェードアウトする再生／一時停止アイコン */}
+          <Animated.View
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: [{ translateX: -20 }, { translateY: -20 }],
+              opacity: iconOpacity,
+            }}
+          >
+            {isPause ? (
+              <Ionicons name="stop-circle-outline" size={70} color="white" />
+            ) : (
+              <Ionicons name="play-circle-outline" size={70} color="white" />
+            )}
+          </Animated.View>
 
-          {/* 上部テキスト */}
-          {/* <View className="flex-row items-center justify-center mt-20">
-            <Text className="text-base text-white font-bold">フォロー中</Text>
-            <Text className="text-base text-gray-300 font-bold ml-2">
-              おすすめ
-            </Text>
-            <Text className="text-base text-gray-300 font-bold ml-2">
-              自分の投稿
-            </Text>
-          </View> */}
-
-          {/* 左下テキスト・動画情報 */}
-          <View className="absolute bottom-40 left-4 right-12">
+          <View className="absolute bottom-56 left-4 right-12">
             <Text className="font-bold text-white mb-1 text-xl">
               {props.title}
             </Text>
-            <Text className=" text-white mb-1">作成日 {createdAt}</Text>
+            <Text className="text-white mb-1">作成日 {createdAt}</Text>
             <Text className="text-white mb-1">{props.description}</Text>
           </View>
 
-          {/* 右下の各種ボタン */}
-          <View className="absolute bottom-28 right-2 items-center">
-            {/* プロフィール（フォローボタン） */}
+          <View className="absolute bottom-40 right-2 items-center">
             <TouchableOpacity className="mb-5 items-center">
               <View className="border-2 border-white rounded-full">
                 <Image
@@ -152,9 +171,6 @@ const podcast: React.FC<PostProps> = (props) => {
                   <Ionicons name="add-outline" size={16} color="white" />
                 </View>
               </View>
-              {/* <Text className="text-base text-white mt-3">
-                {props.createdBy}
-              </Text> */}
             </TouchableOpacity>
 
             <View className="mb-5 items-center">
@@ -202,10 +218,44 @@ const podcast: React.FC<PostProps> = (props) => {
               <Text className="text-white">400</Text>
             </View>
           </View>
+
+          {/* シークバーの実装 */}
+          <View
+            style={{
+              position: "absolute",
+              bottom: 90,
+              left: 20,
+              right: 20,
+            }}
+          >
+            <Slider
+              style={{ width: "100%", height: 40 }}
+              minimumValue={0}
+              maximumValue={duration}
+              value={position}
+              onSlidingComplete={async (value) => {
+                if (sound) {
+                  await sound.setPositionAsync(value);
+                }
+              }}
+              minimumTrackTintColor="#FFFFFF"
+              maximumTrackTintColor="#000000"
+            />
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <Text style={{ color: "#fff" }}>
+                {(position / 1000).toFixed(0)}s
+              </Text>
+              <Text style={{ color: "#fff" }}>
+                {(duration / 1000).toFixed(0)}s
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
   );
 };
 
-export default podcast;
+export default Podcast;
