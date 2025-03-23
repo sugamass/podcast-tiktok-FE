@@ -117,18 +117,18 @@ const PromptFormScreen = () => {
     router.back();
   };
 
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-800">
-        <View className="bg-gray-700 p-8 rounded-3xl">
-          <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text className="text-white text-center mt-4 font-medium">
-            AIがスクリプトを作成中...
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View className="flex-1 items-center justify-center bg-gray-800">
+  //       <View className="bg-gray-700 p-8 rounded-3xl">
+  //         <ActivityIndicator size="large" color="#FFFFFF" />
+  //         <Text className="text-white text-center mt-4 font-medium">
+  //           AIがスクリプトを作成中...
+  //         </Text>
+  //       </View>
+  //     </View>
+  //   );
+  // }
 
   return (
     <View className="flex-1 bg-gray-900">
@@ -334,6 +334,11 @@ const PromptFormScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      {loading && (
+        <View className="absolute inset-0 justify-center items-center">
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      )}
     </View>
   );
 };

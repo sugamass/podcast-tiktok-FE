@@ -58,7 +58,7 @@ const SelectScriptScreen = () => {
           >
             <View>
               <Text className="text-white text-2xl font-bold text-center">
-                テキストをスクリプトに変換
+                文書データをスクリプトに変換
               </Text>
               <Text className="text-white text-sm text-center mt-2">
                 記事や論文などのテキストを解析し、スクリプトとして変換します。

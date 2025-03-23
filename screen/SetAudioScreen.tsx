@@ -189,8 +189,8 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
       );
       console.log("res", res);
       router.replace({
-        pathname: "/(tabs)",
-        params: { audioData: JSON.stringify(res) },
+        pathname: "/(tabs)/post",
+        // params: { audioData: JSON.stringify(res) },
       });
     } catch (err: any) {
       console.error(err);
@@ -393,13 +393,9 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
             onPress={handleSubmit}
             className="mt-4 bg-indigo-600 rounded-xl p-3"
           >
-            {loading ? (
-              <ActivityIndicator size="large" color="#FFFFFF" />
-            ) : (
-              <Text className="text-white text-lg font-bold text-center">
-                {audioUrl ? "音声を再生成" : "音声を作成"}
-              </Text>
-            )}
+            <Text className="text-white text-lg font-bold text-center">
+              {audioUrl ? "音声を再生成" : "音声を作成"}
+            </Text>
           </TouchableOpacity>
           {audioUrl ? <AudioTest url={audioUrl} /> : null}
 
@@ -408,19 +404,15 @@ const SetAudioScreen: React.FC<SetAudioScreenProps> = ({
               onPress={handleConfirm}
               className="mt-8 bg-indigo-600 rounded-xl p-3 border-2 border-white"
             >
-              {loading ? (
-                <ActivityIndicator size="large" color="#FFFFFF" />
-              ) : (
-                <Text className="text-white text-lg font-bold text-center">
-                  ポッドキャストを投稿
-                </Text>
-              )}
+              <Text className="text-white text-lg font-bold text-center">
+                ポッドキャストを投稿
+              </Text>
             </TouchableOpacity>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
       {loading && (
-        <View className="absolute inset-0 bg-black bg-opacity-50 justify-center items-center">
+        <View className="absolute inset-0 justify-center items-center">
           <ActivityIndicator size="large" color="#FFFFFF" />
         </View>
       )}
